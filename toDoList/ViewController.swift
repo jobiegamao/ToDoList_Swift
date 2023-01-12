@@ -9,7 +9,8 @@ import UIKit
 
 class ViewController: UIViewController {
 
-	var stuffToDos = [String]()
+	var todo = [String: String]()
+	var todoIDs = [String]()
 	
 	@IBOutlet var addBtn: UIBarButtonItem!
 	@IBOutlet var tableView: UITableView!
@@ -26,9 +27,8 @@ class ViewController: UIViewController {
 		
 		//if not yet set
 		if !UserDefaults().bool(forKey: "setup"){
-			print("hello")
 			UserDefaults().set(true, forKey: "setup")
-			UserDefaults().set(0, forKey: "count")
+			UserDefaults().set(todo, forKey: "todo")
 		}
 		
 //		get all current saved tasks
@@ -50,24 +50,33 @@ class ViewController: UIViewController {
 	
 	func updateList(){
 		
-		stuffToDos.removeAll()
 		
-		//use guard let since count is optional, non-existant on first run
-		guard let count = UserDefaults().value(forKey: "count") as? Int else{
+		todo.removeAll()
+//		//use guard let since tasks is optional, non-existant on first run
+		
+		guard let tasks = UserDefaults().value(forKey: "todo") as? [String:String] else {
 			return
 		}
-		
-		for i in 0..<count {
-			if let aToDo = UserDefaults().value(forKey: "task_\(i+1)") as? String {
-				stuffToDos.append(aToDo)
-			}
+
+		for (id, text) in tasks{
+			todo[id] = text
 		}
+		todoIDs = Array(todo.keys)
 		
 		tableView.reloadData()
 	}
 	
+	func deleteTask(id: String){
+		print(id)
+		guard (todo[id] != nil) else {return}
+		todo.removeValue(forKey: id)
+		UserDefaults().set(todo, forKey: "todo")
+	}
+	
 }
 
+
+	
 
 // extentions for table view
 
@@ -88,13 +97,23 @@ extension ViewController: UITableViewDataSource {
 	
 	//how many cells
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		return stuffToDos.count
+		return todo.count
 	}
 	
 	//display the stuffToDo in cells
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-		cell.textLabel?.text = stuffToDos[indexPath.row]
+		cell.textLabel?.text = todo[todoIDs[indexPath.row]]
 		return cell
+	}
+	
+	func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+		if editingStyle == .delete {
+			
+			print("id to delete:", todoIDs[indexPath.row])
+			deleteTask(id: todoIDs[indexPath.row])
+			//auto reloads table after
+			tableView.deleteRows(at: [indexPath], with: .fade)
+		}
 	}
 }

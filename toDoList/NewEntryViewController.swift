@@ -33,13 +33,16 @@ class NewEntryViewController: UIViewController, UITextFieldDelegate {
 	@objc func saveEntry(){
 		//check if textfield is empty
 		guard let text = textField.text, !text.isEmpty else {return}
+	
+		var todo = UserDefaults().object(forKey: "todo") as? [String:String] ?? [:]
 		
-		// get and set todos count
-		guard var count = UserDefaults().value(forKey: "count") as? Int else {return}
-		count += 1
-		print(count)
-		UserDefaults().setValue(count, forKey: "count")
-		UserDefaults().setValue(text, forKey: "task_\(count)")
+		
+		let id = UUID().uuidString
+		print(id)
+		todo[id] = text
+		
+		UserDefaults().set(todo, forKey: "todo")
+		
 		
 		//if update func exists, call it
 		update?()
